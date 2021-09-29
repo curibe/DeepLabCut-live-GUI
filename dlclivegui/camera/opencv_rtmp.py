@@ -33,7 +33,7 @@ class OpenCVRTMPCam(Camera):
                 cap.release()
             index+=1
         devs.append("rtmp://localhost/live/mystream")
-        devs.append("rtsp://localhost>8554/mystream")
+        devs.append("rtsp://localhost:8554/mystream")
         return {"device": devs, "display": [True, False]}
 
     def __init__(

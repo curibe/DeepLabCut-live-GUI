@@ -93,9 +93,9 @@ class RTMPDLCLIVEGUI(DLCLiveGUI):
                     lastimg = np.asarray(img)
                     self.send_numpy_frame_to_ffmpeg(lastimg)
 
-                imgtk = ImageTk.PhotoImage(image=img)
-                self.display_frame_label.imgtk = imgtk
-                self.display_frame_label.configure(image=imgtk)
+                # imgtk = ImageTk.PhotoImage(image=img)
+                # self.display_frame_label.imgtk = imgtk
+                # self.display_frame_label.configure(image=imgtk)
 
             self.display_frame_label.after(10, self.display_frame)
 
