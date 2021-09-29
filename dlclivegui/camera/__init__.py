@@ -10,6 +10,7 @@ import platform
 
 from dlclivegui.camera.camera import Camera, CameraError
 from dlclivegui.camera.opencv import OpenCVCam
+from dlclivegui.camera.opencv_rtmp import OpenCVRTMPCam
 
 if platform.system() == "Windows":
     try:
