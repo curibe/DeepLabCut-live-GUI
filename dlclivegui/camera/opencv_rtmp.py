@@ -133,7 +133,6 @@ class OpenCVRTMPCam(Camera):
                     ret, frame = self.cap.read()
                     if not ret:
                         raise CameraError("Error connecting with camera/stream")
-                    print("EN TRY:",ret,frame)
 
                     # self.im_size = (self.cap.get(cv2.CAP_PROP_FRAME_WIDTH), self.cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
                     # self.fps = self.cap.get(cv2.CAP_PROP_FPS)
