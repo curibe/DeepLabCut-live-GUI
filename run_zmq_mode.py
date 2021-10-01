@@ -1,13 +1,16 @@
 from dlclivegui import camera
 from dlclivegui import DLCLiveGUI
-from tkinter import StringVar,BooleanVar,Tk
+from dlclivegui import CameraPoseProcess
+from tkinter import StringVar,BooleanVar,Tk,Toplevel, Label
 from PIL import Image, ImageTk, ImageDraw
 from datetime import datetime
+import time
 import numpy as np
 import time
 import zmq
 import pytz
 import pdb 
+import multiprocess as mp
 
 class RTMPDLCLIVEGUI(DLCLiveGUI):
 
@@ -16,13 +19,10 @@ class RTMPDLCLIVEGUI(DLCLiveGUI):
         self.ctxzmq = zmq.Context()    
         self.sock = self.ctxzmq.socket(zmq.PUB)
         self.sock.bind(url)
-
-
         
         super().__init__()
 
-    
-    
+
     def display_frame(self): 
         """ Display a frame in display window
         """
@@ -84,26 +84,29 @@ class RTMPDLCLIVEGUI(DLCLiveGUI):
                             except Exception as e:
                                 print(e)
                     
-                    self.send_numpy_array_by_zmq(pose)
+                    self.send_image_by_zmq(img)
                     
-
-                # imgtk = ImageTk.PhotoImage(image=img)
-                # self.display_frame_label.imgtk = imgtk
-                # self.display_frame_label.configure(image=imgtk)
 
             self.display_frame_label.after(10, self.display_frame)
 
     def send_numpy_array_by_zmq(self, pose):
 
         if pose is not None:
-            # write to pipe
-            print("sending o zmq:",pose)
             self.send_array(pose, copy=False)
+
+    def send_image_by_zmq(self,image):
+        
+        image_array = np.asarray(image)
+        if image_array is not None:
+            self.send_array(image_array, copy=False)
+
     def send_array(self, A, flags=0,track=False, copy=True):
+        
         md = dict(
             dtype = str(A.dtype),
             shape = A.shape,
-            timeshot = datetime.now(pytz.timezone('America/Bogota')).strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]
+            time_send = time.time(),
+            time_start_pose_process = self.cam_pose_proc.frame_time[0]
 
         )
         self.sock.send_json(md,flags=flags)
