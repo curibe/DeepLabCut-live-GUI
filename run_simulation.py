@@ -6,6 +6,7 @@ from wasabi import Printer
 
 from stream_mode import ServerDLCLiveGUI
 from zmq_mode import ZMQDLCLiveGUI
+from tools import SubscriberClient
 
 app = typer.Typer()
 
@@ -13,6 +14,9 @@ camera_app = typer.Typer(
     help="Allow to apply update operations over camera config"
 )
 app.add_typer(camera_app, name="camera")
+
+zmq_reader_app = typer.Typer()
+app.add_typer(zmq_reader_app, name="zmqreader")
 
 # dlclive_app = typer.Typer(
 #     help="Allow to apply update operations over DLC pipeline config"
@@ -94,13 +98,15 @@ def stream_ffmpeg(
 
 
 @app.command()
-def stream_zmq():
+def stream_zmq(
+    send: Optional[str] = typer.Option("video", '--send', '-s')
+):
     """Run DeepLabCut pipeline reading video from rtsp stream server
 
     This pipeline will deliver the results using zeromq
 
     """
-    dlc = ZMQDLCLiveGUI()
+    dlc = ZMQDLCLiveGUI(send=send)
 
     # set options setted in gui
     dlc.dlc_option = StringVar(value="dlclive-test")
@@ -115,6 +121,29 @@ def stream_zmq():
 
     dlc.run()
 
+@zmq_reader_app.command('read')
+def read_zmq(
+    ip: Optional[str] = typer.Option("localhost", '--ip'),
+    url: Optional[str] = typer.Option("", '--url'),
+    recv: Optional[str] = typer.Option("video", '--recv')
+):
+    
+    client = SubscriberClient(ip=ip, url=url)
+        
+    client.start()
+
+    if recv == "poses":
+        for pose in client.get_poses():
+            print("pose: ", pose)
+    elif recv == "video":
+        print("get frame")
+        client.get_frames()
+
+    else:
+        msg.warn("no options")
+
+    client.end()
+    
 
 if __name__ == "__main__":
     app()
