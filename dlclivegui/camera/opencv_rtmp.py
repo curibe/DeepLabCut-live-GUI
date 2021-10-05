@@ -16,6 +16,7 @@ from dlclivegui.camera import Camera, CameraError
 
 
 class OpenCVRTMPCam(Camera):
+
     @staticmethod
     def arg_restrictions():
         """ Returns a dictionary of arguments restrictions for DLCLiveGUI
@@ -25,15 +26,15 @@ class OpenCVRTMPCam(Camera):
         index = -1
         devs = [index]
         avail = True
-        while index<5:
+        while index < 3:
             cur_index = index + 1
             avail = cap.open(cur_index)
             if avail:
                 devs.append(cur_index)
                 cap.release()
-            index+=1
-        devs.append("rtmp://localhost/live/mystream")
-        devs.append("rtsp://localhost:8554/mystream")
+            index += 1
+        devs.append("rtmp://localhost:1935/input")
+        devs.append("rtsp://localhost:8554/input")
         return {"device": devs, "display": [True, False]}
 
     def __init__(
@@ -58,9 +59,9 @@ class OpenCVRTMPCam(Camera):
                 )
 
             self.video = False
-            if isinstance(device,str) and 'rtsp' in device: 
+            if isinstance(device, str) and 'rtsp' in device:
                 id = device
-            elif isinstance(device,str) and 'rtmp' in device: 
+            elif isinstance(device, str) and 'rtmp' in device:
                 id = device
             else:
                 id = int(device)
@@ -138,7 +139,7 @@ class OpenCVRTMPCam(Camera):
                     # self.fps = self.cap.get(cv2.CAP_PROP_FPS)
                     self.last_cap_read = 0
                 except ConnectionError as e:
-                    print(e," ...trying to connecting again")
+                    print(e, " ...trying to connecting again")
                     self.error = e
                     continue
                 except CameraError:
@@ -157,12 +158,12 @@ class OpenCVRTMPCam(Camera):
             while time.time() - self.last_cap_read < (1.0 / self.fps):
                 pass
         ret, frame = self.cap.read()
-        
+
         if ret:
             if self.rotate:
                 frame = rotate_bound(frame, self.rotate)
             if self.crop:
-                frame = frame[self.crop[2] : self.crop[3], self.crop[0] : self.crop[1]]
+                frame = frame[self.crop[2]: self.crop[3], self.crop[0]: self.crop[1]]
 
             if frame.ndim == 3:
                 if self.cv2_color == 1:
