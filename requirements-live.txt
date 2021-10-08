@@ -1,0 +1,13 @@
+opencv
+typer
+wasabi
+pyzmq
+numpy
+pillow
+pandas
+multiprocess
+colorcet
+tqdm
+serial
+imutils
+pytz
