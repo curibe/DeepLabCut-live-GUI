@@ -12,8 +12,24 @@ msg = Printer()
 
 
 class ZMQDLCLiveGUI(DLCLiveGUI):
+    """Open a zmq socket and send images/poses arrays
+
+    Open a ZMQ socket as PUB-SUB and send the images with poses or
+    poses only to the client/subscriber
+
+    Args:
+        DLCLiveGUI (class): DeepLabCutLive-GUI to configure the
+                            Machine Learning pipeline and receive
+                            images.
+    """
 
     def __init__(self, send='video'):
+        """Initialize the DLCLive-GUI and zmq socket
+
+        Args:
+            send (str, optional): To set if video or poses will
+                                  be sent back. Defaults to 'video'.
+        """
         url = "tcp://*:1936"
         self.ctxzmq = zmq.Context()
         self.sock = self.ctxzmq.socket(zmq.PUB)
@@ -87,22 +103,46 @@ class ZMQDLCLiveGUI(DLCLiveGUI):
                     elif self.send == "poses":
                         self.send_numpy_array_by_zmq(pose)
                     else:
-                        pass     
+                        pass
 
             self.display_frame_label.after(10, self.display_frame)
 
     def send_numpy_array_by_zmq(self, pose):
+        """Send numpy array using zmq
+
+        Args:
+            pose (ndarray): poses as a numpy array
+        """
 
         if pose is not None:
             self.send_array(pose, copy=False)
 
     def send_image_by_zmq(self, image):
+        """Send image or frame as a numpy array using zqm
 
+        Args:
+            image (Pillow Image): Image with poses
+        """
         image_array = np.asarray(image)
-        if image_array is not None:
+        if image_array.flags['C_CONTIGUOUS']:
+            self.send_array(image_array, copy=False)
+        else:
+            image_array = np.ascontiguousarray(image_array)
             self.send_array(image_array, copy=False)
 
     def send_array(self, A, flags=0, track=False, copy=True):
+        """Send numpy array with metadata
+
+        Send numpy array with metadata required to reconstruct
+        the array (dtype,shape)
+
+        Args:
+            A (ndarray): numpy array of poses/OpenCV image
+            flags (int, optional): zmq flag. Defaults to 0.
+            track (bool, optional): zmq flag. Defaults to False.
+            copy (bool, optional): zmq flag. Defaults to True.
+
+        """
 
         md = dict(
             dtype=str(A.dtype),

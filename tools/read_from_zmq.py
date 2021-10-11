@@ -136,19 +136,31 @@ def threadBoth(source=0):
 
 
 class SubscriberClient():
-    """docstring for SubscriberClient."""
+    """Open a zqm socket and receives images.
+    """
+
     def __init__(self, ip="localhost", url=""):
+        """Init the zmq socket to receive images or numpy array.
+
+        Args:
+            ip (str, optional): publisher ip. Defaults to "localhost".
+            url (str, optional): publisher url. Defaults to "".
+        """
 
         self.url = url if url else f"tcp://{ip}:1936"
         self.ctx = zmq.Context()
         self.socket = self.ctx.socket(zmq.SUB)
 
     def start(self, topic=""):
+        """Start the connection with the zmq socket.
+        """
         self.socket.connect(self.url)
         self.socket.subscribe(topic)
 
     def recv_array(self, flags=0, copy=True, track=False):
-        """recv a numpy array"""
+        """Receive a numpy array.
+        """
+
         md = self.socket.recv_json(flags=flags)
 
         localtime = datetime.now(pytz.timezone('America/Bogota'))
@@ -156,19 +168,38 @@ class SubscriberClient():
         buf = memoryview(msg)
         A = np.frombuffer(buf, dtype=md['dtype'])
 
-        return A.reshape(md['shape']), localtime, md["time_send"], md["time_start_pose_process"], 
+        return A.reshape(md['shape']), localtime, md["time_send"], md["time_start_pose_process"],
 
     def get_poses(self):
-        print("Starting receive poses ...")
+        """Read the received poses and return it as iterator
+
+        Yields:
+            ndarray: poses
+        """
+
+        print("Starting to receive poses ...")
+        previous = datetime.now(pytz.timezone('America/Bogota'))
         while True:
-            poses, localtime, timesend, time_pose_process = self.recv_array()
+            poses, localtime, time_returned, time_start_pose_process = self.recv_array()
+            time_sent = datetime.fromtimestamp(time_sent)
+            time_start_pose_process = datetime.fromtimestamp(time_start_pose_process)
+            delta_time = time_sent-time_start_pose_process
+            # print("Delta:  ", delta_time)
+            # print(localtime, time_send, time_start_pose_process)
+            previous = localtime
             yield poses
 
     def get_frames(self):
-        print("Starting receive frames ...")
+        """Read the frames with poses
+        """
+
+        print("Starting to receive frames ...")
         threadBoth(self.socket)
 
     def end(self):
+        """End the connection with zqm socket
+        """
+
         self.socket.close()
         self.ctx.term()
 
@@ -192,4 +223,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-

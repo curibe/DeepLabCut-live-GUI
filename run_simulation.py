@@ -48,7 +48,7 @@ def camera_change_config(
 
     Example:
 
-    $ python run_simulation camera change-config --device rtsp://localhost:8555 
+    $ python run_simulation camera change-config --device rtsp://localhost:8555
     --size 100x100 --fps 60 --file config_file
     """
     args = locals()
@@ -73,11 +73,11 @@ def stream_ffmpeg(
 ):
     """Run DeepLabCut pipeline reading video from rtmp or rtsp stream server
 
-    You can specify the server with the option --server. The server could be 
+    You can specify the server with the option --server. The server could be
     rtsp or rtmp.
-    
+
     If no server is provided, It will read video from a rtsp server by default
-    
+
     his pipeline will deliver the results using the same server, using ffmpeg
 
     """
@@ -121,15 +121,18 @@ def stream_zmq(
 
     dlc.run()
 
+
 @zmq_reader_app.command('read')
 def read_zmq(
     ip: Optional[str] = typer.Option("localhost", '--ip'),
     url: Optional[str] = typer.Option("", '--url'),
     recv: Optional[str] = typer.Option("video", '--recv')
 ):
-    
+    """Run ZMQ subscriber to read video/poses sent by the server
+    """
+
     client = SubscriberClient(ip=ip, url=url)
-        
+
     client.start()
 
     if recv == "poses":
@@ -143,7 +146,7 @@ def read_zmq(
         msg.warn("no options")
 
     client.end()
-    
+
 
 if __name__ == "__main__":
     app()
