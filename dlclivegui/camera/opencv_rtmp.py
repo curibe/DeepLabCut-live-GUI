@@ -170,8 +170,10 @@ class OpenCVRTMPCam(Camera):
                     frame = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
 
             self.last_cap_read = time.time()
+            # frame_number = int(self.cap.get(cv2.CAP_PROP_POS_MSEC))
+            frame_number = int(self.cap.get(cv2.CAP_PROP_POS_FRAMES))
 
-            return frame, self.last_cap_read
+            return frame, self.last_cap_read, frame_number
         else:
             raise CameraError("OpenCV VideoCapture.read did not return an image!")
 

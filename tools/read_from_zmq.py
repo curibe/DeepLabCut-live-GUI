@@ -70,7 +70,7 @@ def recv_array(socket, flags=0, copy=True, track=False):
     msg = socket.recv(flags=flags, copy=copy, track=track)
     buf = memoryview(msg)
     A = np.frombuffer(buf, dtype=md['dtype'])
-
+    # print(md['frame_number'])
     return localtime, md["time_send"], md["time_start_pose_process"], A.reshape(md['shape'])
 
 
@@ -107,10 +107,78 @@ class VideoGet:
             if not self.grabbed:
                 self.stop()
             else:
-                (self.grabbed, self.frame) = next(self.stream)
+                (self.grabbed, self.frame) = next(self.stream)           
+
+    def get_frame(self):
+        if not self.grabbed:
+            self.stop()
+        else:
+            (self.grabbed, self.frame) = next(self.stream)
 
     def stop(self):
         self.stopped = True
+
+
+def noThreading(source=0):
+    """Grab and show video frames without multithreading."""
+
+    video_getter = VideoGet(source)
+    cps = CountsPerSec().start()
+
+    while True:
+        video_getter.get_frame()
+        if not video_getter.grabbed or cv2.waitKey(1) == ord("q"):
+            video_getter.stop()
+            break
+
+        frame = video_getter.frame
+        frame = putIterationsPerSec(frame, cps.countsPerSec())
+        cv2.imshow("Video", frame)
+        cps.increment()
+
+
+def threadVideoGet(source=0):
+    """
+    Dedicated thread for grabbing video frames with VideoGet object.
+    Main thread shows video frames.
+    """
+
+    video_getter = VideoGet(source).start()
+    cps = CountsPerSec().start()
+
+    while True:
+        if (cv2.waitKey(1) == ord("q")) or video_getter.stopped:
+            video_getter.stop()
+            break
+
+        frame = video_getter.frame
+        frame = putIterationsPerSec(frame, cps.countsPerSec())
+        cv2.imshow("Video", frame)
+        cps.increment()
+
+
+def threadVideoShow(source=0):
+    """
+    Dedicated thread for showing video frames with VideoShow object.
+    Main thread grabs video frames.
+    """
+
+    video_getter = VideoGet(source)
+    video_shower = VideoShow(video_getter.frame).start()
+    cps = CountsPerSec().start()
+
+    while True:
+        video_getter.get_frame()
+        if video_getter.stopped or video_shower.stopped:
+            video_shower.stop()
+            video_getter.stop()
+            break
+
+        frame = video_getter.frame
+        print(frame)
+        frame = putIterationsPerSec(frame, cps.countsPerSec())
+        video_shower.frame = frame
+        cps.increment()
 
 
 def threadBoth(source=0):
@@ -163,12 +231,12 @@ class SubscriberClient():
 
         md = self.socket.recv_json(flags=flags)
 
-        localtime = datetime.now(pytz.timezone('America/Bogota'))
+        localtime = datetime.now()
         msg = self.socket.recv(flags=flags, copy=copy, track=track)
         buf = memoryview(msg)
         A = np.frombuffer(buf, dtype=md['dtype'])
 
-        return A.reshape(md['shape']), localtime, md["time_send"], md["time_start_pose_process"],
+        return A.reshape(md['shape']), localtime, md["time_send"], md["time_start_pose_process"], md["frame_number"]
 
     def get_poses(self):
         """Read the received poses and return it as iterator
@@ -178,23 +246,39 @@ class SubscriberClient():
         """
 
         print("Starting to receive poses ...")
-        previous = datetime.now(pytz.timezone('America/Bogota'))
+        # previous = datetime.now(pytz.timezone('America/Bogota'))
+        previous = datetime.now()
         while True:
-            poses, localtime, time_returned, time_start_pose_process = self.recv_array()
+            poses, localtime, time_sent, time_start_pose_process, frame_number = self.recv_array()
             time_sent = datetime.fromtimestamp(time_sent)
             time_start_pose_process = datetime.fromtimestamp(time_start_pose_process)
             delta_time = time_sent-time_start_pose_process
             # print("Delta:  ", delta_time)
-            # print(localtime, time_send, time_start_pose_process)
+            print("+"*30)
+            print("Time when server receive the frame (time_recv): ", time_start_pose_process)
+            print("Time when server send back the poses(time_sent): ", time_sent)
+            print("Time when client receive the poses(localtime_recv): ", localtime)
+            print("time_sent-time_recv: ", time_sent-time_start_pose_process)
+            print("localtime_recv-time_sent: ", localtime-time_sent)
+            print("localtime_recv-time_recv: ", localtime-time_start_pose_process)
+            print("+"*30)
+            #print(localtime, time_send, time_start_pose_process)
             previous = localtime
             yield poses
 
-    def get_frames(self):
+    def get_frames(self, thread_mode=None):
         """Read the frames with poses
         """
 
         print("Starting to receive frames ...")
-        threadBoth(self.socket)
+        if thread_mode == "get":
+            threadVideoGet(source=self.socket)
+        elif thread_mode == "show":
+            threadVideoShow(source=self.socket)
+        elif thread_mode == "both":
+            threadBoth(source=self.socket)
+        else:
+            noThreading(source=self.socket)
 
     def end(self):
         """End the connection with zqm socket

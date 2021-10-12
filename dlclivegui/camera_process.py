@@ -56,6 +56,9 @@ class CameraProcess(object):
 
         self.capture_process = None
         self.writer_process = None
+        
+        self.frame_number_shared = mp.Array(ctypes.c_double, 1)
+        self.frame_number = np.frombuffer(self.frame_number_shared.get_obj(), dtype="d")
 
     def start_capture_process(self, timeout=60):
 
@@ -67,7 +70,7 @@ class CameraProcess(object):
 
         self.capture_process = self.ctx.Process(
             target=self._run_capture,
-            args=(self.frame_shared, self.frame_time_shared),
+            args=(self.frame_shared, self.frame_time_shared, self.frame_number_shared),
             daemon=True,
         )
         self.capture_process.start()
@@ -83,13 +86,14 @@ class CameraProcess(object):
 
         return True
 
-    def _run_capture(self, frame_shared, frame_time):
+    def _run_capture(self, frame_shared, frame_time, frame_number):
 
         res = self.device.im_size
         self.frame = np.frombuffer(frame_shared.get_obj(), dtype="uint8").reshape(
             res[1], res[0], 3
         )
         self.frame_time = np.frombuffer(frame_time.get_obj(), dtype="d")
+        self.frame_number = np.frombuffer(frame_number.get_obj(),dtype="d")
 
         ret = self.device.set_capture_device()
         if not ret:
@@ -113,7 +117,9 @@ class CameraProcess(object):
 
             start_capture = time.time()
 
-            frame, frame_time = self.device.get_image_on_time()
+            frame, frame_time, frame_number = self.device.get_image_on_time()
+            self.frame_number[0] = frame_number
+            # print("camera",self.frame_number)
 
             write_capture = time.time()
 

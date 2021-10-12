@@ -126,7 +126,8 @@ def stream_zmq(
 def read_zmq(
     ip: Optional[str] = typer.Option("localhost", '--ip'),
     url: Optional[str] = typer.Option("", '--url'),
-    recv: Optional[str] = typer.Option("video", '--recv')
+    recv: Optional[str] = typer.Option("video", '--recv'),
+    thread_mode: Optional[str] = typer.Option("None", '--thrmode')
 ):
     """Run ZMQ subscriber to read video/poses sent by the server
     """
@@ -137,10 +138,10 @@ def read_zmq(
 
     if recv == "poses":
         for pose in client.get_poses():
-            print("pose: ", pose)
+            # print("pose: ", pose)
+            pass
     elif recv == "video":
-        print("get frame")
-        client.get_frames()
+        client.get_frames(thread_mode=thread_mode)
 
     else:
         msg.warn("no options")
