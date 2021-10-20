@@ -148,9 +148,7 @@ class ZMQDLCLiveGUI(DLCLiveGUI):
             dtype=str(A.dtype),
             shape=A.shape,
             time_send=time.time(),
-            time_start_pose_process=self.cam_pose_proc.frame_time[0],
-            frame_number=self.cam_pose_proc.frame_number[0]
-
+            time_start_pose_process=self.cam_pose_proc.frame_time[0]
         )
         self.sock.send_json(md, flags=flags)
         return self.sock.send(A, flags, copy=copy, track=track)

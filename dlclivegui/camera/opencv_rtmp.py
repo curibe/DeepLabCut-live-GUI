@@ -6,11 +6,12 @@ Licensed under GNU Lesser General Public License v3.0
 """
 
 
-import cv2
-from tkinter import filedialog
-from imutils import rotate_bound
-import time
 import platform
+import time
+from tkinter import filedialog
+
+import cv2
+from imutils import rotate_bound
 
 from dlclivegui.camera import Camera, CameraError
 
@@ -170,10 +171,8 @@ class OpenCVRTMPCam(Camera):
                     frame = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
 
             self.last_cap_read = time.time()
-            # frame_number = int(self.cap.get(cv2.CAP_PROP_POS_MSEC))
-            frame_number = int(self.cap.get(cv2.CAP_PROP_POS_FRAMES))
 
-            return frame, self.last_cap_read, frame_number
+            return frame, self.last_cap_read
         else:
             raise CameraError("OpenCV VideoCapture.read did not return an image!")
 

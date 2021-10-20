@@ -70,7 +70,7 @@ def recv_array(socket, flags=0, copy=True, track=False):
     msg = socket.recv(flags=flags, copy=copy, track=track)
     buf = memoryview(msg)
     A = np.frombuffer(buf, dtype=md['dtype'])
-    # print(md['frame_number'])
+
     return localtime, md["time_send"], md["time_start_pose_process"], A.reshape(md['shape'])
 
 
@@ -107,7 +107,7 @@ class VideoGet:
             if not self.grabbed:
                 self.stop()
             else:
-                (self.grabbed, self.frame) = next(self.stream)           
+                (self.grabbed, self.frame) = next(self.stream)
 
     def get_frame(self):
         if not self.grabbed:
@@ -236,7 +236,7 @@ class SubscriberClient():
         buf = memoryview(msg)
         A = np.frombuffer(buf, dtype=md['dtype'])
 
-        return A.reshape(md['shape']), localtime, md["time_send"], md["time_start_pose_process"], md["frame_number"]
+        return A.reshape(md['shape']), localtime, md["time_send"], md["time_start_pose_process"]
 
     def get_poses(self):
         """Read the received poses and return it as iterator
@@ -249,7 +249,7 @@ class SubscriberClient():
         # previous = datetime.now(pytz.timezone('America/Bogota'))
         previous = datetime.now()
         while True:
-            poses, localtime, time_sent, time_start_pose_process, frame_number = self.recv_array()
+            poses, localtime, time_sent, time_start_pose_process = self.recv_array()
             time_sent = datetime.fromtimestamp(time_sent)
             time_start_pose_process = datetime.fromtimestamp(time_start_pose_process)
             delta_time = time_sent-time_start_pose_process
@@ -262,7 +262,6 @@ class SubscriberClient():
             print("localtime_recv-time_sent: ", localtime-time_sent)
             print("localtime_recv-time_recv: ", localtime-time_start_pose_process)
             print("+"*30)
-            #print(localtime, time_send, time_start_pose_process)
             previous = localtime
             yield poses
 
