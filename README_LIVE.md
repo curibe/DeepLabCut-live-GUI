@@ -121,6 +121,69 @@ python read_video_mirror.py <ip>
 
 To run different tests, we launch the same EC2 with id `i-07c695248625b3b04`.
 This is because we connect to it by ssh and run manually the ML process and try different configurations.
+
+It is important to note that, as deeplabcut-live-gui is used, it requires that the model is downloaded to the server
+and that the configuration file is located in the path /home/<user>/Documents/DeepLabCut-live-GUI/config/
+
+In this folder on the server, there is a file named `dlc_config.json` and contains the following information:
+
+```json
+{
+  "cameras": {
+    "testing": {
+      "type": "OpenCVRTMPCam",
+      "params": {
+        "device": "rtsp://localhost:8554/input",
+        "file": null,
+        "resolution": [
+          200,
+          200
+        ],
+        "auto_exposure": 0,
+        "exposure": 0,
+        "gain": 0,
+        "rotate": 0,
+        "crop": null,
+        "fps": 30,
+        "display": true,
+        "display_resize": 1
+      }
+    }
+  },
+  "processor_dir": [],
+  "processor_args": {},
+  "dlc_options": {
+    "dlclive-test": {
+      "model_path": "/home/ubuntu/dlc-model/DLC_Dog_resnet_50_iteration-0_shuffle-0",
+      "model_type": "base",
+      "precision": "FP32",
+      "cropping": null,
+      "dynamic": [
+        false,
+        0.5,
+        10
+      ],
+      "resize": 1,
+      "mode": "Optimize Latency"
+    }
+  },
+  "dlc_display_options": {
+    "dlclive-test": {
+      "cmap": "bgy",
+      "radius": 3,
+      "lik_thresh": 0.5
+    }
+  },
+  "subjects": [
+    "test"
+  ],
+  "directories": [
+    "/home/ubuntu"
+  ]
+}
+
+```
+
 We need to move to the dir DeepLabCut-live-GUI to run the process
 
 ### Run process to send frames with poses
@@ -141,7 +204,7 @@ Run the ML process to analyze the video and send poses (ndarray) to the client z
 xvfb-run python run_simulation.py stream-zmq --send poses
 ```
 
-## ==Read the returned data==
+## Read the returned data
 
 You can read the result in two ways:
  - Receive the frames with poses included and reproduce them with OpenCV
