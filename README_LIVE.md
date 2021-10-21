@@ -119,9 +119,7 @@ python read_video_mirror.py <ip>
     
 ## Run the ML process in the server side
 
-To run different tests, we launch the same EC2 with id `i-07c695248625b3b04`  
-![](https://docs.monadical.com/uploads/upload_0b6be4d06cacf50b80cad235a32e28ed.png)
-
+To run different tests, we launch the same EC2 with id `i-07c695248625b3b04`.
 This is because we connect to it by ssh and run manually the ML process and try different configurations.
 We need to move to the dir DeepLabCut-live-GUI to run the process
 
