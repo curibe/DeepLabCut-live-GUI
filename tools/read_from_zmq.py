@@ -247,22 +247,8 @@ class SubscriberClient():
 
         print("Starting to receive poses ...")
         # previous = datetime.now(pytz.timezone('America/Bogota'))
-        previous = datetime.now()
         while True:
             poses, localtime, time_sent, time_start_pose_process = self.recv_array()
-            time_sent = datetime.fromtimestamp(time_sent)
-            time_start_pose_process = datetime.fromtimestamp(time_start_pose_process)
-            delta_time = time_sent-time_start_pose_process
-            # print("Delta:  ", delta_time)
-            print("+"*30)
-            print("Time when server receive the frame (time_recv): ", time_start_pose_process)
-            print("Time when server send back the poses(time_sent): ", time_sent)
-            print("Time when client receive the poses(localtime_recv): ", localtime)
-            print("time_sent-time_recv: ", time_sent-time_start_pose_process)
-            print("localtime_recv-time_sent: ", localtime-time_sent)
-            print("localtime_recv-time_recv: ", localtime-time_start_pose_process)
-            print("+"*30)
-            previous = localtime
             yield poses
 
     def get_frames(self, thread_mode=None):

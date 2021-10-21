@@ -138,8 +138,9 @@ def read_zmq(
 
     if recv == "poses":
         for pose in client.get_poses():
-            # print("pose: ", pose)
-            pass
+            # YOU CAN USE THE POSE TO DO SOME PROCESS
+            print("pose: ", pose)
+            
     elif recv == "video":
         client.get_frames(thread_mode=thread_mode)
 
