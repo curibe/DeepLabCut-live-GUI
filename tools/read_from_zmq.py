@@ -108,12 +108,14 @@ class VideoGet:
                 self.stop()
             else:
                 (self.grabbed, self.frame) = next(self.stream)
+                self.frame = cv2.cvtColor(self.frame,cv2.COLOR_BGR2RGB)
 
     def get_frame(self):
         if not self.grabbed:
             self.stop()
         else:
             (self.grabbed, self.frame) = next(self.stream)
+            self.frame = cv2.cvtColor(self.frame,cv2.COLOR_BGR2RGB)
 
     def stop(self):
         self.stopped = True
@@ -175,7 +177,6 @@ def threadVideoShow(source=0):
             break
 
         frame = video_getter.frame
-        print(frame)
         frame = putIterationsPerSec(frame, cps.countsPerSec())
         video_shower.frame = frame
         cps.increment()
