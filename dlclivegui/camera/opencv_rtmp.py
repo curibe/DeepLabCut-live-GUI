@@ -160,6 +160,7 @@ class OpenCVRTMPCam(Camera):
                 pass
         ret, frame = self.cap.read()
 
+
         if ret:
             if self.rotate:
                 frame = rotate_bound(frame, self.rotate)
@@ -171,10 +172,23 @@ class OpenCVRTMPCam(Camera):
                     frame = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
 
             self.last_cap_read = time.time()
-
+            
             return frame, self.last_cap_read
         else:
-            raise CameraError("OpenCV VideoCapture.read did not return an image!")
+            while True:
+                try:
+                    self.cap = cv2.VideoCapture(self.id)
+                    ret, frame = self.cap.read()
+                    
+                    if not ret:
+                        raise CameraError("OpenCV VideoCapture.read did not return an image!")
+                    
+                    self.last_cap_read = time.time()
+                    return frame, self.last_cap_read
+                except CameraError as e:
+                    print(e, "...trying to read frame again")
+                    continue
+            
 
     def close_capture_device(self):
 
